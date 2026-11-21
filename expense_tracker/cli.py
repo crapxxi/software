@@ -2,13 +2,13 @@ import argparse
 
 from .calculator import total, total_by_category, split_evenly
 from .formatters import FORMATTERS
-from .models import Expense
+from .models import Expense, to_money
 from .storage import load_expenses, save_expenses, DEFAULT_FILE
 
 
 def cmd_add(args):
     expenses = load_expenses(args.file)
-    expense = Expense(args.date, args.category, float(args.amount), args.description)
+    expense = Expense(args.date, args.category, to_money(args.amount), args.description)
     expenses.append(expense)
     save_expenses(expenses, args.file)
     print(f"Added: {expense.date} {expense.category} {expense.amount:.2f}")

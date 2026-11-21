@@ -39,7 +39,8 @@ class JsonFormatter:
         return json.dumps([e.to_dict() for e in expenses], indent=2) + "\n"
 
     def report(self, by_category, total):
-        return json.dumps({"by_category": by_category, "total": total}, indent=2) + "\n"
+        by_category = {cat: str(amount) for cat, amount in by_category.items()}
+        return json.dumps({"by_category": by_category, "total": str(total)}, indent=2) + "\n"
 
 
 FORMATTERS = {

@@ -73,3 +73,11 @@ def test_unknown_format_is_rejected_with_error_exit(tmp_path, capsys):
         main(["--file", str(tmp_path / "e.json"), "list", "--format", "xml"])
     assert exc.value.code == 2
     assert "invalid choice" in capsys.readouterr().err
+
+
+def test_report_json_total_is_exact(tmp_path, capsys):
+    data_file = str(tmp_path / "e.json")
+    run(capsys, "--file", data_file, "add", "2026-11-01", "food", "0.10")
+    run(capsys, "--file", data_file, "add", "2026-11-01", "food", "0.20")
+    report = json.loads(run(capsys, "--file", data_file, "report", "--format", "json"))
+    assert report == {"by_category": {"food": "0.30"}, "total": "0.30"}
