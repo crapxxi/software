@@ -1,14 +1,15 @@
 import argparse
+import sys
 
 from .calculator import total, total_by_category, split_evenly
 from .formatters import FORMATTERS
-from .models import Expense, to_money
+from .models import Expense
 from .storage import load_expenses, save_expenses, DEFAULT_FILE
 
 
 def cmd_add(args):
     expenses = load_expenses(args.file)
-    expense = Expense(args.date, args.category, to_money(args.amount), args.description)
+    expense = Expense.create(args.date, args.category, args.amount, args.description)
     expenses.append(expense)
     save_expenses(expenses, args.file)
     print(f"Added: {expense.date} {expense.category} {expense.amount:.2f}")
@@ -58,7 +59,11 @@ def build_parser():
 
 def main(argv=None):
     args = build_parser().parse_args(argv)
-    args.func(args)
+    try:
+        args.func(args)
+    except ValueError as e:
+        print(f"error: {e}", file=sys.stderr)
+        sys.exit(2)
 
 
 if __name__ == "__main__":

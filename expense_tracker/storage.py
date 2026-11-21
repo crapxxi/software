@@ -9,9 +9,12 @@ DEFAULT_FILE = os.environ.get("EXPENSES_FILE", "expenses.json")
 def load_expenses(path=DEFAULT_FILE):
     if not os.path.exists(path):
         return []
-    with open(path) as f:
-        data = json.load(f)
-    return [Expense.from_dict(item) for item in data]
+    try:
+        with open(path) as f:
+            data = json.load(f)
+        return [Expense.from_dict(item) for item in data]
+    except (ValueError, KeyError, TypeError, ArithmeticError) as e:
+        raise ValueError(f"cannot read data file {path}: {e}") from None
 
 
 def save_expenses(expenses, path=DEFAULT_FILE):

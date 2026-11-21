@@ -16,4 +16,6 @@ def total_by_category(expenses):
 
 
 def split_evenly(amount, people):
+    if people < 1:
+        raise ValueError(f"number of people must be at least 1, got {people}")
     return (Decimal(amount) / people).quantize(CENT, rounding=ROUND_HALF_UP)
