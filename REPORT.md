@@ -37,7 +37,9 @@ started. Everything after that commit follows the assignment workflow.
 | `884afc2` | Mitigation R1: Decimal money | 7 |
 | `ff30976` | Mitigation R4: input validation, readable errors | 7 |
 | `6603541` | Version 0.2.0, README: money format and CSV limitation | 9 |
-| tag `final` | Report and evidence files | 5, 6, 8, 9, 10 |
+| `5c2c3a8` | Report and evidence files | 5, 6, 8, 9, 10 |
+| `4f19a07`, `919da92` | Student details, screenshots of the student's verification run | 7 |
+| tag `final` | Final reflection (latest commit) | 10 |
 
 (`git log --oneline baseline..final` lists them all.)
 
@@ -374,33 +376,31 @@ for the intended use (personal, offline, single user), and each has an explicit 
 
 ## 10. Task #10 — AI reflection
 
-> **Note to the student:** the facts below describe what happened in the AI session. Sentences
-> marked _[confirm]_ describe **your** personal verification, so only keep them if you really
-> did it (re-run `scripts/run_checks.sh`, read the diffs). Rewrite the text in your own words.
+I used Claude Code (CLI) with the Claude Opus 5.5 model as my AI assistant. It received the
+assignment PDF, the repository files and, from Task 2 on, the rules in AGENTS.md, which Claude Code
+loaded automatically through a one-line CLAUDE.md import. The assistant wrote the baseline project,
+the check script, the Strategy refactoring and both mitigations, and it proposed the candidate risks.
 
-I used Claude Code (CLI) with the Claude Opus 5.5 model. Its context was the assignment PDF, the
-repository files, and, after Task 2, the AGENTS.md rules, which Claude Code loaded automatically
-through a CLAUDE.md import. The assistant wrote the baseline project, the checks, the
-refactoring and the mitigations, and proposed the candidate risks.
+The most useful suggestion was to prove the refactoring with a byte-for-byte comparison of all six
+output combinations between the baseline and the refactored version. This is much stronger evidence
+than "the tests still pass", because the original tests did not cover CSV or JSON output at all.
 
-The most useful suggestion was to prove the Strategy refactoring with a byte-for-byte comparison
-of all six output combinations, baseline against refactor. It is much stronger evidence than
-"tests still pass", because the original tests did not cover CSV or JSON output at all.
+The weakest output came from the same assistant. Two of its proposed risks, path traversal and
+unsafe JSON deserialisation, were unsupported: the tool is a local single-user CLI and the `json`
+module never executes code. Its first comparison script ran under zsh without splitting arguments,
+so it "proved" equivalence by comparing two empty outputs. Its first validation change would have
+refused to open data files created by the old version. Each problem was caught only by checking the
+claim against real command output.
 
-The AI also produced weak or wrong output. Two proposed risks, path traversal and unsafe JSON
-deserialisation, were unsupported: the tool is a local single-user CLI, and `json` never
-executes code. Its first comparison script ran under zsh, the arguments were not split, every
-`add` failed, and the script "proved" equivalence by comparing two empty outputs. The first
-validation diff would also have refused to open data files created by the old version. All
-three were caught only because each claim was checked against real command output.
+I cloned the repository from GitHub into a clean folder outside iCloud, installed the pinned tools
+and ran `scripts/run_checks.sh` myself; the screenshots in `docs/evidence/screenshots/` show the
+result. Tests changed the decisions in this project: the failing `pytest` command raised the
+priority of R2, and the legacy-file test changed how the second mitigation works.
 
-_[confirm]_ I personally re-ran `scripts/run_checks.sh` on the baseline and final commits, read
-every diff, and checked that the new tests fail on the old code. The tests changed my decisions:
-the failing `pytest` command raised R2's priority, and the legacy-file test changed how M2 works.
-
-The repository instructions helped. Once AGENTS.md was in place, the agent ran only the listed
-commands, kept test data in temp directories and reported exact outputs. Next, the rules should
-be enforced technically, through CI and a permissions deny-list, instead of being trusted as prose.
+AGENTS.md improved the process: the agent stayed within the listed commands, used temporary data
+and reported exact output. However, it also committed directly to `main` against its own rule,
+which shows that written rules are not enough. Next, they should be enforced by CI and a
+permissions deny-list.
 
 ---
 
@@ -416,7 +416,7 @@ be enforced technically, through CI and a permissions deny-list, instead of bein
 | 6 | same | Implement M1 (Decimal) | Decimal money, 5 new tests | JSON report contract changed (numbers → strings) | Accepted and documented as a trade-off | `05-final-checks.txt` probe 6 |
 | 7 | same | Implement M2 (validation) | Validation, error handling, 16 tests | The first diff locked out legacy data files; `InvalidOperation` is not a `ValueError` | Lenient loading of stored records + regression test; catch `ArithmeticError` | `04-tests-fail-before-mitigation.txt`, `05-final-checks.txt` |
 | 8 | same | Review of own process against AGENTS.md | — | The session committed directly to `main`, breaking review gate 1 (agent works on a branch or worktree). AGENTS.md also missed `formatters.py` and forbade the network access that `build` needs | AGENTS.md corrected; the gate is recorded here as not followed in this session | `git log`, AGENTS.md diff |
-| 9 | same | Report draft (this file) | Report structure and text | Human verification statements need the student's confirmation | Marked _[confirm]_ in section 10 | — |
+| 9 | same | Report draft (this file) | Report structure and text | Human verification statements needed the student's confirmation | Reflection finalised only after the student re-ran the checks in a clean clone | `docs/evidence/screenshots/` |
 
 ## Appendix B — Evidence files
 
