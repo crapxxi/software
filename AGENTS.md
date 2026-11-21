@@ -12,11 +12,12 @@ expense_tracker/
   cli.py         argparse parser + one cmd_* function per subcommand (I/O only)
   models.py      Expense dataclass, (de)serialisation
   calculator.py  pure business logic: totals, per-category totals, split
+  formatters.py  output formats (Strategy): text / csv / json, registry FORMATTERS
   storage.py     load/save the JSON data file
 tests/           pytest; test_cli.py = acceptance criteria, test_calculator.py = unit tests
 scripts/run_checks.sh  full verification (tests, lint, build, CLI probes)
 ```
-Dependency direction: `cli -> calculator, storage -> models`. Business logic must not print or
+Dependency direction: `cli -> calculator, formatters, storage -> models`. Business logic must not print or
 read files; `cli.py` must not contain calculations.
 
 ## Setup
@@ -56,7 +57,8 @@ python3 -m venv .venv
 - Do **not** add, remove or upgrade dependencies (requirements files, `pyproject.toml`) without
   explicit human approval; if you think one is needed, explain why and stop.
 - Do **not** disable tests, lint rules or checks to make them pass.
-- Do **not** access the network except `pip install -r requirements-dev.txt` during setup.
+- Do **not** access the network except `pip install -r requirements-dev.txt` during setup and
+  `python -m build` (its isolated build env downloads setuptools from PyPI).
 
 ## Review gates
 1. Agent works on a separate branch or worktree, never directly on `main`.

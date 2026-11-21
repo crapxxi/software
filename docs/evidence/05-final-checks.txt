@@ -1,0 +1,121 @@
+# Checks for commit 6603541 — 2026-11-21 23:14 +05
+# Env: macOS 15.2, Python 3.10.10
+# Data files are created in a temporary directory (shown below as $T)
+
+## 1. Tests (as documented in README: plain 'pytest')
+$ .venv/bin/pytest -q
+  ............................                                             [100%]
+  28 passed in 0.04s
+  [exit code: 0]
+
+## 2. Tests (python -m pytest, adds cwd to sys.path)
+$ .venv/bin/python -m pytest -q
+  ............................                                             [100%]
+  28 passed in 0.04s
+  [exit code: 0]
+
+## 3. Lint
+$ .venv/bin/ruff check .
+  All checks passed!
+  [exit code: 0]
+
+## 4. Build
+$ .venv/bin/python -m build --wheel --outdir $T/dist .
+  copying build/lib/expense_tracker/models.py -> build/bdist.macosx-11.0-arm64/wheel/./expense_tracker
+  copying build/lib/expense_tracker/__init__.py -> build/bdist.macosx-11.0-arm64/wheel/./expense_tracker
+  copying build/lib/expense_tracker/cli.py -> build/bdist.macosx-11.0-arm64/wheel/./expense_tracker
+  copying build/lib/expense_tracker/calculator.py -> build/bdist.macosx-11.0-arm64/wheel/./expense_tracker
+  copying build/lib/expense_tracker/storage.py -> build/bdist.macosx-11.0-arm64/wheel/./expense_tracker
+  copying build/lib/expense_tracker/__main__.py -> build/bdist.macosx-11.0-arm64/wheel/./expense_tracker
+  running install_egg_info
+  Copying expense_tracker.egg-info to build/bdist.macosx-11.0-arm64/wheel/./expense_tracker-0.2.0-py3.10.egg-info
+  running install_scripts
+  creating build/bdist.macosx-11.0-arm64/wheel/expense_tracker-0.2.0.dist-info/WHEEL
+  creating '$T/dist/.tmp-v2sqcx4f/expense_tracker-0.2.0-py3-none-any.whl' and adding 'build/bdist.macosx-11.0-arm64/wheel' to it
+  adding 'expense_tracker/__init__.py'
+  adding 'expense_tracker/__main__.py'
+  adding 'expense_tracker/calculator.py'
+  adding 'expense_tracker/cli.py'
+  adding 'expense_tracker/formatters.py'
+  adding 'expense_tracker/models.py'
+  adding 'expense_tracker/storage.py'
+  adding 'expense_tracker-0.2.0.dist-info/METADATA'
+  adding 'expense_tracker-0.2.0.dist-info/WHEEL'
+  adding 'expense_tracker-0.2.0.dist-info/entry_points.txt'
+  adding 'expense_tracker-0.2.0.dist-info/top_level.txt'
+  adding 'expense_tracker-0.2.0.dist-info/RECORD'
+  removing build/bdist.macosx-11.0-arm64/wheel
+  Successfully built expense_tracker-0.2.0-py3-none-any.whl
+  [exit code: 0]
+
+## 5. Smoke test
+$ .venv/bin/python -m expense_tracker --file $T/e.json add 2026-11-01 food 12.50 lunch
+  Added: 2026-11-01 food 12.50
+  [exit code: 0]
+
+$ .venv/bin/python -m expense_tracker --file $T/e.json add 2026-11-02 transport 3 bus
+  Added: 2026-11-02 transport 3.00
+  [exit code: 0]
+
+$ .venv/bin/python -m expense_tracker --file $T/e.json report
+  food              12.50
+  transport          3.00
+  TOTAL             15.50
+  [exit code: 0]
+
+$ .venv/bin/python -m expense_tracker --file $T/e.json split 2
+  Each person pays: 7.75
+  [exit code: 0]
+
+## 6. Probe: money arithmetic 0.10 + 0.20
+$ .venv/bin/python -m expense_tracker --file $T/f.json add 2026-11-01 food 0.10
+  Added: 2026-11-01 food 0.10
+  [exit code: 0]
+
+$ .venv/bin/python -m expense_tracker --file $T/f.json add 2026-11-01 food 0.20
+  Added: 2026-11-01 food 0.20
+  [exit code: 0]
+
+$ .venv/bin/python -m expense_tracker --file $T/f.json report --format json
+  {
+    "by_category": {
+      "food": "0.30"
+    },
+    "total": "0.30"
+  }
+  [exit code: 0]
+
+## 7. Probe: invalid input
+$ .venv/bin/python -m expense_tracker --file $T/g.json add 2026-11-01 food -50
+  error: amount must be a positive number, got '-50'
+  [exit code: 2]
+
+$ .venv/bin/python -m expense_tracker --file $T/g.json add 2026-11-01 food abc
+  error: amount must be a number, got 'abc'
+  [exit code: 2]
+
+$ .venv/bin/python -m expense_tracker --file $T/e.json split 0
+  error: number of people must be at least 1, got 0
+  [exit code: 2]
+
+## 8. Probe: CSV formula injection
+$ .venv/bin/python -m expense_tracker --file $T/h.json add 2026-11-01 food 1 =HYPERLINK("http://evil.example","x")
+  Added: 2026-11-01 food 1.00
+  [exit code: 0]
+
+$ .venv/bin/python -m expense_tracker --file $T/h.json list --format csv
+  date,category,amount,description
+  2026-11-01,food,1.00,"=HYPERLINK(""http://evil.example"",""x"")"
+  [exit code: 0]
+
+## 9. Probe: corrupt data file
+$ .venv/bin/python -m expense_tracker --file $T/c.json list
+  error: cannot read data file $T/c.json: Expecting property name enclosed in double quotes: line 1 column 2 (char 1)
+  [exit code: 2]
+
+## 10. Probe: unknown output format
+$ .venv/bin/python -m expense_tracker --file $T/e.json list --format xml
+  usage: expense-tracker list [-h] [--format {text,csv,json}]
+  expense-tracker list: error: argument --format: invalid choice: 'xml' (choose from 'text', 'csv', 'json')
+  [exit code: 2]
+

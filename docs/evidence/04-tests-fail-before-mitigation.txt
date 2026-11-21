@@ -1,0 +1,26 @@
+# Task 7: final tests (commit ff30976) run against code BEFORE mitigations (commit 392a387)
+# Purpose: show the new tests fail without the fixes, i.e. they really detect R1 and R4.
+# Note: tests/test_calculator.py cannot even be collected on old code (imports to_money, added by M1).
+
+$ python -m pytest -q -p no:cacheprovider tests/test_cli.py tests/test_validation.py
+FAILED tests/test_cli.py::test_report_json_total_is_exact
+FAILED tests/test_validation.py::test_add_rejects_invalid_amount[-50-positive]
+FAILED tests/test_validation.py::test_add_rejects_invalid_amount[0-positive]
+FAILED tests/test_validation.py::test_add_rejects_invalid_amount[abc-must be a number]
+FAILED tests/test_validation.py::test_add_rejects_invalid_amount[NaN-positive]
+FAILED tests/test_validation.py::test_add_rejects_invalid_amount[Infinity-positive]
+FAILED tests/test_validation.py::test_add_rejects_invalid_amount[1.005-2 decimal places]
+FAILED tests/test_validation.py::test_add_rejects_invalid_date[not-a-date]
+FAILED tests/test_validation.py::test_add_rejects_invalid_date[2026-13-01]
+FAILED tests/test_validation.py::test_add_rejects_invalid_date[01.11.2026]
+FAILED tests/test_validation.py::test_add_rejects_empty_category
+FAILED tests/test_validation.py::test_split_rejects_zero_people
+FAILED tests/test_validation.py::test_corrupt_data_file_gives_readable_error_and_is_not_overwritten
+FAILED tests/test_validation.py::test_valid_input_still_accepted
+FAILED tests/test_validation.py::test_data_file_with_non_numeric_amount_gives_readable_error
+15 failed, 6 passed in 0.10s
+[exit code: 1]
+
+# Same command on the final commit ff30976:
+21 passed in 0.04s
+[exit code: 0]
