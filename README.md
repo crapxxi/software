@@ -24,6 +24,13 @@ python -m expense_tracker split 3                 # share per person
 Data is stored in `expenses.json` in the current directory. Override with `--file PATH`
 or the `EXPENSES_FILE` environment variable.
 
+Amounts must be positive with at most 2 decimal places. Since v0.2.0 they are stored and
+printed in JSON as strings (`"12.50"`) so money stays exact; data files from v0.1.0 still load.
+Invalid input prints `error: ...` and exits with code 2.
+
+> Known limitation: CSV exports are not escaped against spreadsheet formulas. Do not open a CSV
+> export in a spreadsheet program if descriptions came from an untrusted source.
+
 ## Development
 
 ```bash
