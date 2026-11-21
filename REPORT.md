@@ -4,8 +4,10 @@
 
 | | |
 |---|---|
-| Student | _Surname Name_ |
-| Repository | `se-assignment-05-expense-tracker` (local git repository, exported as archive) |
+| Student | Turugeldiyev Alikhan |
+| Student ID | 24B032075 |
+| Class | Thursday 13:00–16:00 |
+| Repository | https://github.com/crapxxi/software |
 | Baseline version | tag `baseline` = commit `1b851b6` |
 | Final version | tag `final` (see `git log`) |
 | AI assistant | Claude Code (CLI), model Claude Opus 5.5 (`claude-opus-5-5`), Anthropic |
