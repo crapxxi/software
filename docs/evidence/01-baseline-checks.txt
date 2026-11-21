@@ -1,0 +1,178 @@
+# Checks for commit 1b851b6 — 2026-11-21 23:04 +05
+# Env: macOS 15.2, Python 3.10.10
+# Data files are created in a temporary directory (shown below as $T)
+
+## 1. Tests (as documented in README: plain 'pytest')
+$ ~/Documents/se-assignment-05-expense-tracker/.venv/bin/pytest -q
+  
+  ==================================== ERRORS ====================================
+  __________________ ERROR collecting tests/test_calculator.py ___________________
+  ImportError while importing test module '/private/tmp/claude-501/et-baseline/tests/test_calculator.py'.
+  Hint: make sure your test modules/packages have valid Python names.
+  Traceback:
+  ~/miniforge3/lib/python3.10/importlib/__init__.py:126: in import_module
+      return _bootstrap._gcd_import(name[level:], package, level)
+  tests/test_calculator.py:1: in <module>
+      from expense_tracker.calculator import total, total_by_category, split_evenly
+  E   ModuleNotFoundError: No module named 'expense_tracker'
+  =========================== short test summary info ============================
+  ERROR tests/test_calculator.py
+  !!!!!!!!!!!!!!!!!!!! Interrupted: 1 error during collection !!!!!!!!!!!!!!!!!!!!
+  1 error in 0.05s
+  [exit code: 2]
+
+## 2. Tests (python -m pytest, adds cwd to sys.path)
+$ ~/Documents/se-assignment-05-expense-tracker/.venv/bin/python -m pytest -q
+  ...                                                                      [100%]
+  3 passed in 0.00s
+  [exit code: 0]
+
+## 3. Lint
+$ ~/Documents/se-assignment-05-expense-tracker/.venv/bin/ruff check .
+  All checks passed!
+  [exit code: 0]
+
+## 4. Build
+$ ~/Documents/se-assignment-05-expense-tracker/.venv/bin/python -m build --wheel --outdir $T/dist .
+  creating build/bdist.macosx-11.0-arm64/wheel/expense_tracker
+  copying build/lib/expense_tracker/models.py -> build/bdist.macosx-11.0-arm64/wheel/./expense_tracker
+  copying build/lib/expense_tracker/__init__.py -> build/bdist.macosx-11.0-arm64/wheel/./expense_tracker
+  copying build/lib/expense_tracker/cli.py -> build/bdist.macosx-11.0-arm64/wheel/./expense_tracker
+  copying build/lib/expense_tracker/calculator.py -> build/bdist.macosx-11.0-arm64/wheel/./expense_tracker
+  copying build/lib/expense_tracker/storage.py -> build/bdist.macosx-11.0-arm64/wheel/./expense_tracker
+  copying build/lib/expense_tracker/__main__.py -> build/bdist.macosx-11.0-arm64/wheel/./expense_tracker
+  running install_egg_info
+  Copying expense_tracker.egg-info to build/bdist.macosx-11.0-arm64/wheel/./expense_tracker-0.1.0-py3.10.egg-info
+  running install_scripts
+  creating build/bdist.macosx-11.0-arm64/wheel/expense_tracker-0.1.0.dist-info/WHEEL
+  creating '$T/dist/.tmp-w9fv31ef/expense_tracker-0.1.0-py3-none-any.whl' and adding 'build/bdist.macosx-11.0-arm64/wheel' to it
+  adding 'expense_tracker/__init__.py'
+  adding 'expense_tracker/__main__.py'
+  adding 'expense_tracker/calculator.py'
+  adding 'expense_tracker/cli.py'
+  adding 'expense_tracker/models.py'
+  adding 'expense_tracker/storage.py'
+  adding 'expense_tracker-0.1.0.dist-info/METADATA'
+  adding 'expense_tracker-0.1.0.dist-info/WHEEL'
+  adding 'expense_tracker-0.1.0.dist-info/entry_points.txt'
+  adding 'expense_tracker-0.1.0.dist-info/top_level.txt'
+  adding 'expense_tracker-0.1.0.dist-info/RECORD'
+  removing build/bdist.macosx-11.0-arm64/wheel
+  Successfully built expense_tracker-0.1.0-py3-none-any.whl
+  [exit code: 0]
+
+## 5. Smoke test
+$ ~/Documents/se-assignment-05-expense-tracker/.venv/bin/python -m expense_tracker --file $T/e.json add 2026-11-01 food 12.50 lunch
+  Added: 2026-11-01 food 12.50
+  [exit code: 0]
+
+$ ~/Documents/se-assignment-05-expense-tracker/.venv/bin/python -m expense_tracker --file $T/e.json add 2026-11-02 transport 3 bus
+  Added: 2026-11-02 transport 3.00
+  [exit code: 0]
+
+$ ~/Documents/se-assignment-05-expense-tracker/.venv/bin/python -m expense_tracker --file $T/e.json report
+  food              12.50
+  transport          3.00
+  TOTAL             15.50
+  [exit code: 0]
+
+$ ~/Documents/se-assignment-05-expense-tracker/.venv/bin/python -m expense_tracker --file $T/e.json split 2
+  Each person pays: 7.75
+  [exit code: 0]
+
+## 6. Probe: money arithmetic 0.10 + 0.20
+$ ~/Documents/se-assignment-05-expense-tracker/.venv/bin/python -m expense_tracker --file $T/f.json add 2026-11-01 food 0.10
+  Added: 2026-11-01 food 0.10
+  [exit code: 0]
+
+$ ~/Documents/se-assignment-05-expense-tracker/.venv/bin/python -m expense_tracker --file $T/f.json add 2026-11-01 food 0.20
+  Added: 2026-11-01 food 0.20
+  [exit code: 0]
+
+$ ~/Documents/se-assignment-05-expense-tracker/.venv/bin/python -m expense_tracker --file $T/f.json report --format json
+  {
+    "by_category": {
+      "food": 0.30000000000000004
+    },
+    "total": 0.30000000000000004
+  }
+  [exit code: 0]
+
+## 7. Probe: invalid input
+$ ~/Documents/se-assignment-05-expense-tracker/.venv/bin/python -m expense_tracker --file $T/g.json add 2026-11-01 food -50
+  Added: 2026-11-01 food -50.00
+  [exit code: 0]
+
+$ ~/Documents/se-assignment-05-expense-tracker/.venv/bin/python -m expense_tracker --file $T/g.json add 2026-11-01 food abc
+  Traceback (most recent call last):
+    File "~/miniforge3/lib/python3.10/runpy.py", line 196, in _run_module_as_main
+      return _run_code(code, main_globals, None,
+    File "~/miniforge3/lib/python3.10/runpy.py", line 86, in _run_code
+      exec(code, run_globals)
+    File "/private/tmp/claude-501/et-baseline/expense_tracker/__main__.py", line 3, in <module>
+      main()
+    File "/private/tmp/claude-501/et-baseline/expense_tracker/cli.py", line 91, in main
+      args.func(args)
+    File "/private/tmp/claude-501/et-baseline/expense_tracker/cli.py", line 14, in cmd_add
+      expense = Expense(args.date, args.category, float(args.amount), args.description)
+  ValueError: could not convert string to float: 'abc'
+  [exit code: 1]
+
+$ ~/Documents/se-assignment-05-expense-tracker/.venv/bin/python -m expense_tracker --file $T/e.json split 0
+  Traceback (most recent call last):
+    File "~/miniforge3/lib/python3.10/runpy.py", line 196, in _run_module_as_main
+      return _run_code(code, main_globals, None,
+    File "~/miniforge3/lib/python3.10/runpy.py", line 86, in _run_code
+      exec(code, run_globals)
+    File "/private/tmp/claude-501/et-baseline/expense_tracker/__main__.py", line 3, in <module>
+      main()
+    File "/private/tmp/claude-501/et-baseline/expense_tracker/cli.py", line 91, in main
+      args.func(args)
+    File "/private/tmp/claude-501/et-baseline/expense_tracker/cli.py", line 59, in cmd_split
+      share = split_evenly(total(expenses), args.people)
+    File "/private/tmp/claude-501/et-baseline/expense_tracker/calculator.py", line 19, in split_evenly
+      return round(amount / people, 2)
+  ZeroDivisionError: float division by zero
+  [exit code: 1]
+
+## 8. Probe: CSV formula injection
+$ ~/Documents/se-assignment-05-expense-tracker/.venv/bin/python -m expense_tracker --file $T/h.json add 2026-11-01 food 1 =HYPERLINK("http://evil.example","x")
+  Added: 2026-11-01 food 1.00
+  [exit code: 0]
+
+$ ~/Documents/se-assignment-05-expense-tracker/.venv/bin/python -m expense_tracker --file $T/h.json list --format csv
+  date,category,amount,description
+  2026-11-01,food,1.0,"=HYPERLINK(""http://evil.example"",""x"")"
+  [exit code: 0]
+
+## 9. Probe: corrupt data file
+$ ~/Documents/se-assignment-05-expense-tracker/.venv/bin/python -m expense_tracker --file $T/c.json list
+  Traceback (most recent call last):
+    File "~/miniforge3/lib/python3.10/runpy.py", line 196, in _run_module_as_main
+      return _run_code(code, main_globals, None,
+    File "~/miniforge3/lib/python3.10/runpy.py", line 86, in _run_code
+      exec(code, run_globals)
+    File "/private/tmp/claude-501/et-baseline/expense_tracker/__main__.py", line 3, in <module>
+      main()
+    File "/private/tmp/claude-501/et-baseline/expense_tracker/cli.py", line 91, in main
+      args.func(args)
+    File "/private/tmp/claude-501/et-baseline/expense_tracker/cli.py", line 21, in cmd_list
+      expenses = load_expenses(args.file)
+    File "/private/tmp/claude-501/et-baseline/expense_tracker/storage.py", line 13, in load_expenses
+      data = json.load(f)
+    File "~/miniforge3/lib/python3.10/json/__init__.py", line 293, in load
+      return loads(fp.read(),
+    File "~/miniforge3/lib/python3.10/json/__init__.py", line 346, in loads
+      return _default_decoder.decode(s)
+    File "~/miniforge3/lib/python3.10/json/decoder.py", line 337, in decode
+      obj, end = self.raw_decode(s, idx=_w(s, 0).end())
+    File "~/miniforge3/lib/python3.10/json/decoder.py", line 353, in raw_decode
+      obj, end = self.scan_once(s, idx)
+  json.decoder.JSONDecodeError: Expecting property name enclosed in double quotes: line 1 column 2 (char 1)
+  [exit code: 1]
+
+## 10. Probe: unknown output format
+$ ~/Documents/se-assignment-05-expense-tracker/.venv/bin/python -m expense_tracker --file $T/e.json list --format xml
+  Unknown format
+  [exit code: 0]
+
