@@ -64,3 +64,12 @@ def test_ac4_split_prints_rounded_share(tmp_path, capsys):
     data_file = str(tmp_path / "e.json")
     seed(capsys, data_file)
     assert run(capsys, "--file", data_file, "split", "3").strip() == "Each person pays: 7.67"
+
+
+def test_unknown_format_is_rejected_with_error_exit(tmp_path, capsys):
+    import pytest
+
+    with pytest.raises(SystemExit) as exc:
+        main(["--file", str(tmp_path / "e.json"), "list", "--format", "xml"])
+    assert exc.value.code == 2
+    assert "invalid choice" in capsys.readouterr().err

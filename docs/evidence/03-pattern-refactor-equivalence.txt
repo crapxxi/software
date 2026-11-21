@@ -1,0 +1,68 @@
+# Task 3: byte-for-byte output comparison, baseline (1b851b6) vs Strategy refactor
+# Same 3 synthetic expenses added, then list/report x text/csv/json (6 combinations)
+$ wc -l baseline.out refactor.out
+      47 baseline.out
+      47 refactor.out
+      94 total
+
+$ diff baseline.out refactor.out
+  no differences (exit code 0)
+
+$ shasum -a 256 *.out
+3ec810f6390251973edacf81662349a952e5542a61257ce8ca9cb6714d369ff6  baseline.out
+3ec810f6390251973edacf81662349a952e5542a61257ce8ca9cb6714d369ff6  refactor.out
+
+--- refactor.out (for reference) ---
+== list text
+2026-11-01  food              12.50  lunch
+2026-11-02  transport          3.00  bus
+2026-11-03  food               7.50  coffee, large
+== list csv
+date,category,amount,description^M
+2026-11-01,food,12.5,lunch^M
+2026-11-02,transport,3.0,bus^M
+2026-11-03,food,7.5,"coffee, large"^M
+== list json
+[
+  {
+    "date": "2026-11-01",
+    "category": "food",
+    "amount": 12.5,
+    "description": "lunch"
+  },
+  {
+    "date": "2026-11-02",
+    "category": "transport",
+    "amount": 3.0,
+    "description": "bus"
+  },
+  {
+    "date": "2026-11-03",
+    "category": "food",
+    "amount": 7.5,
+    "description": "coffee, large"
+  }
+]
+== report text
+food              20.00
+transport          3.00
+TOTAL             23.00
+== report csv
+category,amount^M
+food,20.0^M
+transport,3.0^M
+TOTAL,23.0^M
+== report json
+{
+  "by_category": {
+    "food": 20.0,
+    "transport": 3.0
+  },
+  "total": 23.0
+}
+
+$ .venv/bin/python -m pytest -q
+8 passed in 0.02s
+
+$ .venv/bin/ruff check .
+All checks passed!

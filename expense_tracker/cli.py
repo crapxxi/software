@@ -1,10 +1,7 @@
 import argparse
-import csv
-import io
-import json
-import sys
 
 from .calculator import total, total_by_category, split_evenly
+from .formatters import FORMATTERS
 from .models import Expense
 from .storage import load_expenses, save_expenses, DEFAULT_FILE
 
@@ -19,39 +16,12 @@ def cmd_add(args):
 
 def cmd_list(args):
     expenses = load_expenses(args.file)
-    if args.format == "text":
-        for e in expenses:
-            print(f"{e.date}  {e.category:<12} {e.amount:>10.2f}  {e.description}")
-    elif args.format == "csv":
-        writer = csv.writer(sys.stdout)
-        writer.writerow(["date", "category", "amount", "description"])
-        for e in expenses:
-            writer.writerow([e.date, e.category, e.amount, e.description])
-    elif args.format == "json":
-        print(json.dumps([e.to_dict() for e in expenses], indent=2))
-    else:
-        print("Unknown format")
+    print(FORMATTERS[args.format].expenses(expenses), end="")
 
 
 def cmd_report(args):
     expenses = load_expenses(args.file)
-    by_cat = total_by_category(expenses)
-    if args.format == "text":
-        for cat, amount in by_cat.items():
-            print(f"{cat:<12} {amount:>10.2f}")
-        print(f"{'TOTAL':<12} {total(expenses):>10.2f}")
-    elif args.format == "csv":
-        buf = io.StringIO()
-        writer = csv.writer(buf)
-        writer.writerow(["category", "amount"])
-        for cat, amount in by_cat.items():
-            writer.writerow([cat, amount])
-        writer.writerow(["TOTAL", total(expenses)])
-        print(buf.getvalue(), end="")
-    elif args.format == "json":
-        print(json.dumps({"by_category": by_cat, "total": total(expenses)}, indent=2))
-    else:
-        print("Unknown format")
+    print(FORMATTERS[args.format].report(total_by_category(expenses), total(expenses)), end="")
 
 
 def cmd_split(args):
@@ -73,11 +43,11 @@ def build_parser():
     p_add.set_defaults(func=cmd_add)
 
     p_list = sub.add_parser("list")
-    p_list.add_argument("--format", default="text")
+    p_list.add_argument("--format", default="text", choices=FORMATTERS)
     p_list.set_defaults(func=cmd_list)
 
     p_report = sub.add_parser("report")
-    p_report.add_argument("--format", default="text")
+    p_report.add_argument("--format", default="text", choices=FORMATTERS)
     p_report.set_defaults(func=cmd_report)
 
     p_split = sub.add_parser("split")
