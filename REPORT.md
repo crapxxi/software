@@ -305,8 +305,12 @@ the mitigations (commit `392a387`): **15 failed, 6 passed**. On the final code: 
 - R7/R12: no test kills a write midway or runs concurrent writes.
 - `python -m build` needs network access to PyPI (isolated build env, unpinned setuptools). During the final run it stalled for several minutes on a slow connection (see the R6 residual).
 - No type checker (mypy/pyright) was run; the project has no type annotations to check.
-- Screenshots: all evidence is captured as text logs in `docs/evidence/`. _[Add terminal
-  screenshots of `scripts/run_checks.sh` here if your instructor requires images.]_
+- Screenshots of the final verification run (`scripts/run_checks.sh` in a clean clone from GitHub,
+  commit `4f19a07`, run by the student on 2026-11-21/22):
+  - `docs/evidence/screenshots/01-checks-tests-lint-build-smoke.png`: tests (28 passed ×2), lint,
+    build, smoke test, all exit code 0.
+  - `docs/evidence/screenshots/02-probes-mitigations-verified.png`: probes 6–10, with `"0.30"` (M1),
+    readable errors with exit 2 (M2), CSV formula still exported (R3 open), corrupt file, unknown format.
 
 ### 7.5 Updated risk scores
 
@@ -422,5 +426,6 @@ be enforced technically, through CI and a permissions deny-list, instead of bein
 | `docs/evidence/03-pattern-refactor-equivalence.txt` | Byte-for-byte output comparison baseline vs refactor |
 | `docs/evidence/04-tests-fail-before-mitigation.txt` | Final tests run on pre-mitigation code (15 failed) vs final (21 passed) |
 | `docs/evidence/05-final-checks.txt` | `scripts/run_checks.sh` on the final version |
+| `docs/evidence/screenshots/*.png` | Terminal screenshots of the final verification run |
 
 Reproduce any of them: `git checkout <commit> && scripts/run_checks.sh .venv/bin/python`.
